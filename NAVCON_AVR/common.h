@@ -3,18 +3,19 @@
  *
  * Created: 2017-05-24 20:52:28
  *  Author: LUKE
+ * EDIT: 15.07.2019
  */ 
 
 
 #ifndef COMMON_H_
 #define COMMON_H_
 
-typedef struct                  //struktura do przechowywania zmiennych podstawowych
+typedef struct               
 {
-	int32_t course;             //aktualny kurs statku w stopniach (pomno¿ony przez 10)
-	int16_t speed;              //aktualna prêdkoœæ dok³adnoœæ 0,1 kt (prêdkoœæ pomno¿ona przez 10)
-	int32_t posLong;            //d³ugoœæ geograficzna pomno¿ona przez 6 (bez przecinka)
-	int32_t posLat;             //szerokoœæ geagraficzna pomno¿ona przez 6 (bez przecinka)
+	int32_t course;             //current course (times 10 -> ex: 100 means 10 degrees)
+	int16_t speed;              //current speed accuracy 0,1 kt (times 10 -> ex: 100 means 10 knots)
+	int32_t posLong;            //longitude times 1000000 (accurancy 0.000001)
+	int32_t posLat;              //latitude times 1000000 (accurancy 0.000001)
 	char MMSI[10];              //9 digits in ""
 	char NAVSTATUS[2];          //0d 0 do 15
 	char PAS[3];
@@ -23,40 +24,40 @@ typedef struct                  //struktura do przechowywania zmiennych podstawo
 	char CALL_SIGN[8];
 	char SHIP_NAME[21];
 	char TYPE_OF_SHIP[3];       // 1 do 99
-	char DIM_A[4];              //D£UGOŒÆ
-	char DIM_B[4];               //
+	char DIM_A[4];              //length
+	char DIM_B[4];               //width
 	char DIM_C[4];
 	char DIM_D[4];
-	uint8_t ETA_month;          //1 d0 12
-	uint8_t ETA_day;            //1 do 31
-	uint8_t ETA_hour;           //0 do 24
-	uint8_t ETA_minute ;        //0 do 59
+	uint8_t ETA_month;          //1 to 12
+	uint8_t ETA_day;            //1 to 31
+	uint8_t ETA_hour;           //0 to 24
+	uint8_t ETA_minute ;        //0 to 59
 	char DRAUGHT[5];
-	char DESTINATION[21];       //ca³¹ tablicê wype³niaæ do koñca znakami @
+	char DESTINATION[21];       //destination name unused array indexes fill with '@'
 } OWNSHIP ;
 typedef struct
 {
-	uint8_t lumin;              // wartoœci od 1 do 5 --> intensywnoœæ œwiecenia diód
-	uint8_t mode;               //tryby dzienny, nocny, itp
+	uint8_t lumin;              // 1 to 5 led lumination level
+	uint8_t mode;               //mode ed bright day, day, night etc.
 	
 }SETTING;
 typedef struct
 {
-	uint16_t maxROT;                //maksymalny rate of turn na sekunde(0,01 stopnia/sek)
-	uint8_t dROT_po_dT;             //inercja statku (wielkoœæ zmian ROT w czasie 0,01 stopnia / sek)
-	int16_t maxSpeed;               //maksymalna prêdkoœæ przy maksymalnej nastawie
-	uint16_t speedAccelerationTime;  //czas po którym prêdkoœæ zwiêksz/zmniejszy siê o 0,1 kt (0,01s)
+	uint16_t maxROT;                //max rate of turn per sec(0,01 deg/sec)
+	uint8_t dROT_po_dT;             //ship innertion(delta rot 0,01 per sec)
+	int16_t maxSpeed;               
+	uint16_t speedAccelerationTime;  //speed changin time (by 0,01 kt)
 }SHIPMODEL;
 
 typedef struct
 {
-	int32_t currentROT;	          //dok³adnoœæ 0,01stopnia np 10-->ROT = 0,1stopnia
-	int32_t calculatedROT;             // kierunek ROT aktualny inicjowany przez -5 tylko do pierwszego rozruchu funkcji
-	int8_t currentSteerPos;   //aktualne polozenie p³etwy sterowej
-	int32_t requiredSpeed;             //rz¹dana prêdkoœæ w oparciu o nastawê prêdkoœci speedSetOnConsole
-	int8_t speedSetOnConsole;              //0d -8 do +8 nastawa prêdkoœci zmieniana dotykowymi przyciskami
+	int32_t currentROT;	          //accurancy 0,01deg ex: 10-->ROT = 0,1deg
+	int32_t calculatedROT;        
+	int8_t currentSteerPos;   	 
+	int32_t requiredSpeed;        //required spped based on speedSetOnConsole
+	int8_t speedSetOnConsole;     //form -8 to +8 manipulated on capacitive touch on console
 	int32_t requiredCourse;
-	int8_t requiredSteerPos;    // od -35 do +35
+	int8_t requiredSteerPos;      // from -35 to +35
 	
 	
 }SHIPPARAM;
@@ -84,52 +85,52 @@ extern uint8_t switchedToManual;
 
 void NAVCON_CALIBRATION(void);
 
-void steerInit(void);                              //inicjacja steru
-uint16_t readSteerWheelAngleFromADC(void);                   //funkcja dokonuj¹ca pomiaru na kanale ADC0 (pin PF0) - mierz¹ca wychylenia steru
-void convertFrom10bitValueToRequiredSteerAngle(void);              // zmienia shipparam.requiredSteerPos
+void steerInit(void);                      
+uint16_t readSteerWheelAngleFromADC(void);                   
+void convertFrom10bitValueToRequiredSteerAngle(void);              // edited  shipparam.requiredSteerPos
 void displaySteerLed(int8_t steerAngle,uint8_t positive, uint8_t negative);
-void moveSteer(int8_t requiredSteerPos);     //symuluje ruch steru (czas uzale¿niony od steerReactionTimer
+void moveSteer(int8_t requiredSteerPos);     					   //steer time simulation (depend of steerReactionTimer)
 
-void timerInit(void);                                              //inicjalizacja 8bitowego TIMER0 do precyzyjnej obs³ugi ró¿nych funkcji
+void timerInit(void);      
 
-int8_t computeROT(int8_t currentSteerAngle);                  //oblicz rz¹dany ROT w oparciu o wychylenie steru oraz charakterystyki statku
-uint16_t computeCourse(void);                                         //oblicz kurs na podstawie rot wyliczonego oraz aktualnego
-void computeShipParameters(void);   //uruchamiaj dwie powy¿sze funkcje co 1s w oparciu o zmienn¹ timer1
+int8_t computeROT(int8_t currentSteerAngle);                
+uint16_t computeCourse(void);                                 
+void computeShipParameters(void); 
 
-void simulateChangingOfSpeed(void);             //symuluje zmianê prêdkoœci w oparciu o rz¹dan¹ prêdkoœc oraz timer
-void wyswietlenieNastawyPredkosciLED(int16_t rzadanaPredkosc, uint8_t positive, uint8_t negative);              //ustawia zmienn¹ shipparam.speedSetOnConsole
+void simulateChangingOfSpeed(void);             
+void showSpeedSettingLED(int16_t _requiredSpeed, uint8_t positive, uint8_t negative);    //changing shipparam.speedSetOnConsole
 
-int8_t autopilotPID(int32_t givenCourse);       //funkcja zmienia rz¹dany wychylenie steru na podstawie kursu zadanego oraz ownship.course (kursu aktualnego)
+int8_t autopilotPID(int32_t givenCourse); 
  
- void computePosition(void);
- 
-void tarczaInit(void);                         //zainicjuj expander I2C pcf8574
-void moveRoseDiskByOneStep(uint8_t dir);   //rusz tarczê o 0,1 stopnia w kierunku zale¿nym od dir (1-->prawo   0-->lewo)
+void computePosition(void);
+uint16_t degreesToLED(uint16_t degrees);
+void roseInit(void);                         //initiate I2C pcf8574
+void moveRoseDiskByOneStep(uint8_t dir);
 void setRoseDiskCourse(void);
 void motorCoilOff(void);
-void kalibracjaTarczy(void);
-void buzzerInit(void);                         //inicjacja buzzera (uzyæ na poczatku main)
+void roseCalibration(void);
+void buzzerInit(void);                         //call in begin of main
 
-void Timer2Init(void);                         //inicjacja timera do obs³ugi enkoderow (u¿yæ na pocz¹tku main)
-void enkoderyInit(void);                       //inicjacja pinów jako wwejœcia do enkoderow z podci¹daniem (u¿yc na pocz¹tku main)
+void Timer2Init(void);                         //timer for encoders (call in begin of main)
+void encodersInit(void);                       //call in begin of main
 void ReadEncoder1();
 void ReadEncoder2();
  extern int8_t enc_delta1;
  extern int8_t enc_delta2;
 
-int8_t Read1StepEncoder(uint8_t numerEnkodera);
-int8_t Read2StepEncoder(uint8_t numerEnkodera);
-int8_t Read4StepEncoder(uint8_t numerEnkodera);
+int8_t Read1StepEncoder(uint8_t encoderNumber);
+int8_t Read2StepEncoder(uint8_t encoderNumber);
+int8_t Read4StepEncoder(uint8_t encoderNumber);
  
-void uaktualnijKursAuto(void);       // funkja do odczytu nastawy enkodera i zapisania w zmiennej shipparm.requiredCourse
-void uaktualnijPredkoscAuto(void);   // funkja do odczytu nastawy enkodera i zapisania w zmiennej shipparm.requiredSpeed
+void updateCourseAuto(void);         // read encoders and set to shipparm.requiredCourse
+void updateSpeedAuto(void);  		 // read encoders and set to shipparm.requiredSpeed
 
-uint16_t odczytajPrzyciskiGlowne(void);
-void dlugoscDzwiekuBuzzer(uint8_t czas); //w³acza buzzer na okres okreœlony w argumencie (wartosc 1 --> 0,01s)
-uint16_t odczytajPrzyciskiSterowania(void);
+uint16_t readMainButtons(void);
+void buzzerSoundTime(uint8_t time);  //buzzer beep time (1 --> 0,01sec)
+uint16_t readSteerButtons(void);
 
-void czujnikTarczyInit(void);            //inicjalizacja czujnika
-void sprawdzKursNaTarczy(void);          //musi byæ wywo³ywana w pêtli
+void RoseSensorInit(void);            
+//void sprawdzKursNaTarczy(void);          //musi byï¿½ wywoï¿½ywana w pï¿½tli
 
 //########################################################################################################
 //ETHERNET FUNCTIONS

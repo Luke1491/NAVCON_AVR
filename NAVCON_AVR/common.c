@@ -198,7 +198,7 @@ void NAVCON_CALIBRATION(void)
 }
 
 //###############COMPUTING SPPED AND COURSE FUNCTIONS###################
-int8_t computeROT(int8_t currentSteerAngle)  //funkcja oblicza kurs co 1 sekundê --> ustawiæ odpowiedni timer programowy
+int8_t computeROT(int8_t currentSteerAngle)  //funkcja oblicza kurs co 1 sekundï¿½ --> ustawiï¿½ odpowiedni timer programowy
 {
 	if(ownship.speed<=20) 
 	{    
@@ -277,7 +277,7 @@ void computeShipParameters(void)
 		ws2812SendDataPORTD((uint8_t *)steerLed, STEER_MAXPIX * 3, STER_PIN);
 		prepareAndSendOWNDatagram();
 		//*************************************************
-		encoderNumberOfStepsPerSecond = 0; //zmienna potrzebna do obs³ugi enkodera(szybsza inkrementacja po szybkim krêceniu)
+		encoderNumberOfStepsPerSecond = 0; //encoders - higher incrementation by 10 degrees
 		encoderBiggerStepAllowed = encoderBiggerStepAllowed - 1;
 		if(encoderBiggerStepAllowed<=10) encoderBiggerStepAllowed=10;
 		//*************************************************
@@ -320,7 +320,7 @@ uint16_t readSteerWheelAngleFromADC(void) {
 	//wait until measurement in finished
 	while(ADCSRA & (1<<ADSC));
 	//after measurement finish when ADSC=0, return 16 bit value form ADCH and ADCL
-	return ADC;// ten zapis***(ADCH<<8) | ADCL;***NIE DZIA£A --DLACZEGO???
+	return ADC;// ten zapis***(ADCH<<8) | ADCL;***not work - WHY???
 }
 
 void convertFrom10bitValueToRequiredSteerAngle(void)
@@ -509,23 +509,23 @@ void simulateChangingOfSpeed(void)
 	speedDifference = shipparam.requiredSpeed - ownship.speed;  //speed difference in knots *10
 	if(speedDifference>0)  ownship.speed += 1;					//increase current speed by 0,1kt
 	else if(speedDifference == 0);
-	else  ownship.speed -= 1;                                   //if rz¹danaSpeed < aktualnaSpeed --> decrease ownship.speed o 0,1kt
+	else  ownship.speed -= 1;                                   //if rzï¿½danaSpeed < aktualnaSpeed --> decrease ownship.speed o 0,1kt
 	
 	if(ownship.speed >= shipmodel.maxSpeed) ownship.speed = shipmodel.maxSpeed;
 	if(ownship.speed <= -shipmodel.maxSpeed) ownship.speed = -shipmodel.maxSpeed;
 }
 
-void wyswietlenieNastawyPredkosciLED(int16_t rzadanaPredkosc, uint8_t positive, uint8_t negative) //nastawa predkosci od -8 do +8
+void showSpeedSettingLED(int16_t _requiredSpeed, uint8_t positive, uint8_t negative) //speed set from -8 to +8
 {
-	if(rzadanaPredkosc>=shipmodel.maxSpeed) rzadanaPredkosc = shipmodel.maxSpeed; //machanizam apobieaj¹cy zwiêkszeniu predkosci ponad max speed
-	int8_t procentPredkosc;
-	procentPredkosc = (rzadanaPredkosc*100)/(shipmodel.maxSpeed); //procentowy stosunek predkosci rzadanej do predkosci maksymalnej
+	if(_requiredSpeed>=shipmodel.maxSpeed) _requiredSpeed = shipmodel.maxSpeed; //not allow to increase speed above max speed
+	int8_t percentSpeed;
+	percentSpeed = (_requiredSpeed*100)/(shipmodel.maxSpeed);
 	for(uint8_t i=0; i<SPEED_MAXPIX; i++)
 	{
 		speedLed[i] = rgbColors[5];
 	}
 	
-	if(procentPredkosc<=100 && procentPredkosc>88)
+	if(percentSpeed<=100 && percentSpeed>88)
 	{
 		speedLed[2] = rgbColors[positive];
 		speedLed[3] = rgbColors[positive];
@@ -537,7 +537,7 @@ void wyswietlenieNastawyPredkosciLED(int16_t rzadanaPredkosc, uint8_t positive, 
 		speedLed[9] = rgbColors[positive];
 		
 	}
-	if(procentPredkosc<=88 && procentPredkosc>75)
+	if(percentSpeed<=88 && percentSpeed>75)
 	{
 		speedLed[3] = rgbColors[positive];
 		speedLed[4] = rgbColors[positive];
@@ -548,7 +548,7 @@ void wyswietlenieNastawyPredkosciLED(int16_t rzadanaPredkosc, uint8_t positive, 
 		speedLed[9] = rgbColors[positive];
 		
 	}
-	if(procentPredkosc<=75 && procentPredkosc>63)
+	if(percentSpeed<=75 && percentSpeed>63)
 	{
 		speedLed[4] = rgbColors[positive];
 		speedLed[5] = rgbColors[positive];
@@ -557,7 +557,7 @@ void wyswietlenieNastawyPredkosciLED(int16_t rzadanaPredkosc, uint8_t positive, 
 		speedLed[8] = rgbColors[positive];
 		speedLed[9] = rgbColors[positive];
 	}
-	if(procentPredkosc<=63 && procentPredkosc>50)
+	if(percentSpeed<=63 && percentSpeed>50)
 	{
 		speedLed[5] = rgbColors[positive];
 		speedLed[6] = rgbColors[positive];
@@ -565,30 +565,30 @@ void wyswietlenieNastawyPredkosciLED(int16_t rzadanaPredkosc, uint8_t positive, 
 		speedLed[8] = rgbColors[positive];
 		speedLed[9] = rgbColors[positive];
 	}
-	if(procentPredkosc<=50 && procentPredkosc>38)
+	if(percentSpeed<=50 && percentSpeed>38)
 	{
 		speedLed[6] = rgbColors[positive];
 		speedLed[7] = rgbColors[positive];
 		speedLed[8] = rgbColors[positive];
 		speedLed[9] = rgbColors[positive];
 	}
-	if(procentPredkosc<=38 && procentPredkosc>25)
+	if(percentSpeed<=38 && percentSpeed>25)
 	{
 		speedLed[7] = rgbColors[positive];
 		speedLed[8] = rgbColors[positive];
 		speedLed[9] = rgbColors[positive];
 	}
-	if(procentPredkosc<=25 && procentPredkosc>13)
+	if(percentSpeed<=25 && percentSpeed>13)
 	{
 		speedLed[8] = rgbColors[positive];
 		speedLed[9] = rgbColors[positive];
 	}
-	if(procentPredkosc<=13 && procentPredkosc>0)
+	if(percentSpeed<=13 && percentSpeed>0)
 	{
 		speedLed[9] = rgbColors[positive];
 	}
 	
-	if(procentPredkosc>=-100 && procentPredkosc<-88)
+	if(percentSpeed>=-100 && percentSpeed<-88)
 	{
 		speedLed[10] = rgbColors[negative];
 		speedLed[11] = rgbColors[negative];
@@ -599,7 +599,7 @@ void wyswietlenieNastawyPredkosciLED(int16_t rzadanaPredkosc, uint8_t positive, 
 		speedLed[16] = rgbColors[negative];
 		speedLed[17] = rgbColors[negative];
 	}
-	if(procentPredkosc>=-88 && procentPredkosc<-75)
+	if(percentSpeed>=-88 && percentSpeed<-75)
 	{
 		speedLed[10] = rgbColors[negative];
 		speedLed[11] = rgbColors[negative];
@@ -609,7 +609,7 @@ void wyswietlenieNastawyPredkosciLED(int16_t rzadanaPredkosc, uint8_t positive, 
 		speedLed[15] = rgbColors[negative];
 		speedLed[16] = rgbColors[negative];
 	}
-	if(procentPredkosc>=-75 && procentPredkosc<-63)
+	if(percentSpeed>=-75 && percentSpeed<-63)
 	{
 		speedLed[10] = rgbColors[negative];
 		speedLed[11] = rgbColors[negative];
@@ -618,7 +618,7 @@ void wyswietlenieNastawyPredkosciLED(int16_t rzadanaPredkosc, uint8_t positive, 
 		speedLed[14] = rgbColors[negative];
 		speedLed[15] = rgbColors[negative];
 	}
-	if(procentPredkosc>=-63 && procentPredkosc<-50)
+	if(percentSpeed>=-63 && percentSpeed<-50)
 	{
 		speedLed[10] = rgbColors[negative];
 		speedLed[11] = rgbColors[negative];
@@ -626,43 +626,43 @@ void wyswietlenieNastawyPredkosciLED(int16_t rzadanaPredkosc, uint8_t positive, 
 		speedLed[13] = rgbColors[negative];
 		speedLed[14] = rgbColors[negative];
 	}
-	if(procentPredkosc>=-50 && procentPredkosc<-38)
+	if(percentSpeed>=-50 && percentSpeed<-38)
 	{
 		speedLed[10] = rgbColors[negative];
 		speedLed[11] = rgbColors[negative];
 		speedLed[12] = rgbColors[negative];
 		speedLed[13] = rgbColors[negative];
 	}
-	if(procentPredkosc>=-38 && procentPredkosc<-25)
+	if(percentSpeed>=-38 && percentSpeed<-25)
 	{
 		speedLed[10] = rgbColors[negative];
 		speedLed[11] = rgbColors[negative];
 		speedLed[12] = rgbColors[negative];
 	}
-	if(procentPredkosc>=-25 && procentPredkosc<-13)
+	if(percentSpeed>=-25 && percentSpeed<-13)
 	{
 		speedLed[10] = rgbColors[negative];
 		speedLed[11] = rgbColors[negative];
 	}
-	if(procentPredkosc>=-13 && procentPredkosc<0)
+	if(percentSpeed>=-13 && percentSpeed<0)
 	{
 		speedLed[10] = rgbColors[negative];
 	}
 }
 
 /////////////////////////////////////////////////////////////////////
-//************************OBLICZNIE POZYCJI**************************
+//************************POSITION COUNTING**************************
 void computePosition(void)
 {
-	int32_t distance=0; //dystans pokonany w ci¹gu ostatniej sekundy
+	int32_t distance=0; //distance made in last one second
 	int32_t deltaLat, deltaLong;
-	distance = (((int32_t)ownship.speed*1000)/36)/60; //dystans w milach morskich z precyzj¹ do 6 miejsca po przecinku: wynik0,000001 bêdzie w zmiennej jako 1
+	distance = (((int32_t)ownship.speed*1000)/36)/60; //Nm distance -> precision to 0,000001 (0,000001 -> distance = 1)
 	double courseRadians = ((double)ownship.course/573);
 	double latitudeRadians = ((double)ownship.posLat/57295779);
-	//oblicznie szerokoœci
-	deltaLat = distance * cos(courseRadians); // delta z precyzj¹ do 0,000001
-	ownship.posLat = ownship.posLat + deltaLat;//nowa pozycja z dok³adnoœci¹ do 0,000001
-	//obliczanie dlugoœci
+	//latitude
+	deltaLat = distance * cos(courseRadians); // precision up to 0,000001
+	ownship.posLat = ownship.posLat + deltaLat;//new position with precision up to 0,000001
+	//longitude
 	int32_t zboczeniaNawig = distance * sin(courseRadians);
 	deltaLong = zboczeniaNawig/cos(latitudeRadians);
 	ownship.posLong = ownship.posLong + deltaLong;
@@ -677,23 +677,23 @@ void computePosition(void)
 //A4988 driver connected to PCF8574P connected to AtMega thru I2C (adress: 0x70)
 //A4988 information:
 /*
-	TRYB PRACY
+	OPERTING MODE
 	MS1	MS2	MS3
-	0	0	0	-- PE£NY KROK
-	1	0	0	--1/2 KROKU
-	0	1	0	--1/4 KROKU
-	1	1	0	--1/8 KROKU
-	1	1	1	--1/16 KROKU
+	0	0	0	-- FULL STEP
+	1	0	0	--1/2 STEP
+	0	1	0	--1/4 STEP
+	1	1	0	--1/8 STEP
+	1	1	1	--1/16 STEP
 
 	A4988		CONNECTED PCF8574P PIN		DESCRIPTION
-	EN			P0					        1-wy³¹czone wyjœcie silnika  / 0-w³¹czone wyjœcie silnika
+	EN			P0					        1-motor off  / 0-motor on
 	MS1			P1
 	MS2			P2 
 	MS3			P3 
-	RESET		P4							1-NORMALNE DZIA£ANIE / 0-RESET
-	SLEEP		P5							1- normalna praca / 0-sleep
-	STEP		P6							PRZEJŒCIE NA 1 SKOK O JEDEN STEP
-	DIR			P7							1-obrót w prawo / 0-obrót w lewo
+	RESET		P4							1-normal operation / 0-RESET
+	SLEEP		P5							1- normal operation  / 0-sleep
+	STEP		P6							value 1 -> make one step
+	DIR			P7							1-turn right / 0-turn left
 */
 #define MOTOREN				 0
 #define MOTORMS1			 1
@@ -703,55 +703,55 @@ void computePosition(void)
 #define MOTORSLEEP			 5
 #define MOTORSTEP			 6
 #define MOTORDIR			 7
-#define MOTORMAINSETTING	((1 << MOTORRESET)|(1 << MOTORSLEEP))//pe³en krok
-//tarcza kursów
-void tarczaInit(void)
+#define MOTORMAINSETTING	((1 << MOTORRESET)|(1 << MOTORSLEEP))//peï¿½en krok
+//rose
+void roseInit(void)
 {
-	I2C_StartSelectWait(0x70); //wyœlij bit startu i adres ekspandera tarczy
+	I2C_StartSelectWait(0x70); //send start bit and expander addres
 	I2C_SendByte(MOTORMAINSETTING | (1 << MOTOREN)); //1/16 step , normal operation , motor's coil off
 	I2C_Stop();
 	I2C_WaitTillStopWasSent();
 }
 
-uint16_t stopnieNaLED(uint16_t stopnie)
+uint16_t degreesToLED(uint16_t degrees)
 {
-	stopnie=stopnie+360-(ownship.course/10);
-	if(stopnie >= 360) stopnie=stopnie-360;
-	if(stopnie < 0) return 0;
-	uint16_t liczba_w_tablicy_LED = 0;
-	uint16_t wynikModulo = 0;
-	if(stopnie == 0 ) stopnie = 1;
-	for(uint16_t i = 0; i<(stopnie*10); i++)
+	degrees=degrees+360-(ownship.course/10);
+	if(degrees >= 360) degrees=degrees-360;
+	if(degrees < 0) return 0;
+	uint16_t LedArrayNumber = 0;
+	uint16_t moduloResult = 0;
+	if(degrees == 0 ) degrees = 1;
+	for(uint16_t i = 0; i<(degrees*10); i++)
 	{
-		wynikModulo = i % 38;
-		if(wynikModulo == 0) liczba_w_tablicy_LED = liczba_w_tablicy_LED + 1;
+		moduloResult = i % 38;
+		if(moduloResult == 0) LedArrayNumber = LedArrayNumber + 1;
 	}
-	return liczba_w_tablicy_LED;
+	return LedArrayNumber;
 }
 
-void czujnikTarczyInit(void)
+void RoseSensorInit(void)
 {
-	DDRC &= ~(1<<PC2); //PC3 jako wejœcie
-	PORTC &= ~(1<<PC2); //bez podci¹dania do VCC (rezystor podci¹daj¹cy jest na p³ytce pcb)
+	DDRC &= ~(1<<PC2); //PC2 as input
+	PORTC &= ~(1<<PC2); //no pullup (pullup made on PCB)
 }
 
 uint8_t fullStep = 1; // 1 - full step (no movement required)   0- micro step in progress 
-uint8_t tarczaDir = 0; // 0-left   1-right
+uint8_t roseDir = 0; // 0-left   1-right
 void moveRoseDiskByOneStep(uint8_t dir) //1 step == 0,1 degree with gear
 {
 	I2C_StartSelectWait(0x70);
 		if(dir) {
 		I2C_SendByte(MOTORMAINSETTING | (1 << MOTORSTEP)); //make one step 
 		I2C_SendByte(MOTORMAINSETTING); //prepare for another step
-		 } //je¿eli dir jest wiêksza od 0 to krêæ w prawo
+		 } //rose turn right
 	else { 
 		I2C_SendByte(MOTORMAINSETTING | (1<<MOTORDIR)); //make one step 
 		I2C_SendByte(MOTORMAINSETTING | (1 << MOTORSTEP) |(1<<MOTORDIR)); //make one step
 		I2C_SendByte((MOTORMAINSETTING) |(1<<MOTORDIR)); //prepare for another step
-		 } //krêæ w lewo 
+		 } //rose turn left
 	I2C_Stop();
 	I2C_WaitTillStopWasSent();
-	fullStep = 1; //wykonano krok
+	fullStep = 1; //step has made
 }
 
 void motorCoilOff(void)
@@ -768,8 +768,8 @@ void setRoseDiskCourse(void)
 {
 	if(fullStep)
 	{
-		motorCoilOff();//wy³¹cz cewkê  silnika
-		fullStep = 0; //zezwolenie na w³¹czenie silnika w nastêpnym wywolaniu(za 100ms)
+		motorCoilOff();//turnoff motor coil
+		fullStep = 0; //allow to enable motor in next call(for 100ms)
 	}
 	else
 	{
@@ -780,40 +780,40 @@ void setRoseDiskCourse(void)
 	if(ROTDifference<-1800) ROTDifference = (3600-ROTDifference);
 	if(ROTDifference > 0) 
 	{
-		tarczaDir = 1;
-		moveRoseDiskByOneStep(tarczaDir);
+		roseDir = 1;
+		moveRoseDiskByOneStep(roseDir);
 		roseCourse+=1;
 		if(roseCourse > 3600) roseCourse = 0;
 	}
 	else if(ROTDifference < 0)
 	{
-		tarczaDir = 0;
-		moveRoseDiskByOneStep(tarczaDir);
+		roseDir = 0;
+		moveRoseDiskByOneStep(roseDir);
 		roseCourse -=1;
 		if(roseCourse < 0) roseCourse = 3600;
 	}
-	else ; //gdy ro¿nica == 0 to nic nie rób
+	else ; //if ROTDifference == 0 -> do nothing
 	}//end else from main if
 }
 
-void kalibracjaTarczy(void)
+void roseCalibration(void)
 {
 	while(!(PINC & (1<<PC2)))
 	{
 		moveRoseDiskByOneStep(1);
-	}//end pêtli while
+	}//end while
 	roseCourse = 0;
 }
 
 //*******************BUZZER*********************
 void buzzerInit(void)
 {
-	DDRC |= (1<<PC1); //PC1 jako wyjœcie
-	PORTC &= ~(1<<PC1); //stan niski - buzzer nie pracuje
+	DDRC |= (1<<PC1); //PC1 as output
+	PORTC &= ~(1<<PC1); //low state - buzzer not working
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
-//obs³uga enkodera
+//encoder
 /////////////////////////////////////////////////////////////////////////////////////
 #define ENC1DDR DDRD
 #define ENC2DDR DDRD
@@ -825,21 +825,21 @@ void buzzerInit(void)
 #define ENC1SIGN2 (1<<PD3)
 #define ENC2SIGN1 (1<<PD1)
 #define ENC2SIGN2 (1<<PD0)
-//timer do obs³ugi enkoderów
+//encoders timer
 void Timer2Init(void)
 {
-	TCCR2B=_BV(CS01);	//Preskaler CLKIO/8
-	TIMSK2|=_BV(TOIE2);	//Odblokuj przerwanie nadmiaru timera 0
+	TCCR2B=_BV(CS01);	//Prescaler CLKIO/8
+	TIMSK2|=_BV(TOIE2);	//enable overflow interrupt
 }
 
 ISR(TIMER2_OVF_vect)
 {
-	ReadEncoder1();    //Odczytaj stan klawiszy
-	ReadEncoder2();    //Odczytaj stan klawiszy
+	ReadEncoder1();
+	ReadEncoder2();
 }
 
 //*************
-void enkoderyInit(void)
+void encodersInit(void)
 {
 	ENC1DDR &= ~(ENC1SIGN1 | ENC1SIGN2); //make PD0 and PD1 as input
 	ENC2DDR &= ~(ENC2SIGN1 | ENC2SIGN2); //make PD2 and PD3 as input
@@ -854,7 +854,7 @@ void ReadEncoder1()
 {
 	static int8_t last;
 	static uint8_t laststate;
-	static uint8_t counters[2];	//Tablica zawieraj¹ca liczniki
+	static uint8_t counters[2];	//program counters array
 	int8_t newpos, diff;
 	
 	uint8_t state=ENC1PIN;
@@ -877,12 +877,12 @@ void ReadEncoder1()
 
 	newpos=0;
 	if((ENC1PIN & ENC1SIGN1)==0) newpos=3;
-	if((ENC1PIN & ENC1SIGN2)==0) newpos^=1;	// konwersja kodu Graya na binarny
+	if((ENC1PIN & ENC1SIGN2)==0) newpos^=1;	// grey to binaty conversion
 	diff=last-newpos;
 	if(diff & 1)
-	{				// bit 0 = krok
+	{				// bit 0 = step
 		last=newpos;
-		enc_delta1+=(diff & 2)-1;	//bit 1 - kierunek
+		enc_delta1+=(diff & 2)-1;	//bit 1 - direction
 	}
 }
 
@@ -890,7 +890,7 @@ void ReadEncoder2()
 {
 	static int8_t last;
 	static uint8_t laststate;
-	static uint8_t counters[2];	//Tablica zawieraj¹ca liczniki
+	static uint8_t counters[2];
 	int8_t newpos, diff;
 	
 	uint8_t state=ENC2PIN;
@@ -913,18 +913,18 @@ void ReadEncoder2()
 
 	newpos=0;
 	if((ENC2PIN & ENC2SIGN1)==0) newpos=3;
-	if((ENC2PIN & ENC2SIGN2)==0) newpos^=1;	// konwersja kodu Graya na binarny
+	if((ENC2PIN & ENC2SIGN2)==0) newpos^=1;
 	diff=last-newpos;
 	if(diff & 1)
-	{				// bit 0 = krok
+	{
 		last=newpos;
-		enc_delta2+=(diff & 2)-1;	//bit 1 - kierunek
+		enc_delta2+=(diff & 2)-1;
 	}
 }
-int8_t Read1StepEncoder(uint8_t numerEnkodera)
+int8_t Read1StepEncoder(uint8_t encoderNumber)
 {
 	int8_t val;
-	if(numerEnkodera == 1) 
+	if(encoderNumber == 1) 
 	{
 		ReadEncoder1();
 	    val=enc_delta1;
@@ -940,10 +940,10 @@ int8_t Read1StepEncoder(uint8_t numerEnkodera)
 	return val;
 }
 
-int8_t Read2StepEncoder(uint8_t numerEnkodera)
+int8_t Read2StepEncoder(uint8_t encoderNumber)
 {
 	int8_t val;
-	if(numerEnkodera == 1) 
+	if(encoderNumber == 1) 
 	{
 		ReadEncoder1();
 		val=enc_delta1;
@@ -959,10 +959,10 @@ int8_t Read2StepEncoder(uint8_t numerEnkodera)
 	return val>>1;
 }
 
-int8_t Read4StepEncoder(uint8_t numerEnkodera)
+int8_t Read4StepEncoder(uint8_t encoderNumber)
 {
 	int8_t val;
-	if(numerEnkodera == 1)
+	if(encoderNumber == 1)
 	{
 		ReadEncoder1();
 		val=enc_delta1;
@@ -978,7 +978,7 @@ int8_t Read4StepEncoder(uint8_t numerEnkodera)
 }
 
 
-void uaktualnijKursAuto(void)
+void updateCourseAuto(void)
 {
 	static uint16_t lastCourse=0;
 	int8_t ROTDifference = shipparam.requiredCourse-lastCourse;
@@ -991,15 +991,15 @@ void uaktualnijKursAuto(void)
 	encoderNumberOfStepsPerSecond=1;
 }
 
-void uaktualnijPredkoscAuto(void)
+void updateSpeedAuto(void)
 {
 	
-	shipparam.requiredSpeed += Read4StepEncoder(2); //odczytaj stan enkodera2 i dodaj do rzadanej predkosci
+	shipparam.requiredSpeed += Read4StepEncoder(2); //read encoder2 and add to requiredSpeed
 	if(shipparam.requiredSpeed >= shipmodel.maxSpeed) shipparam.requiredSpeed = shipmodel.maxSpeed;
 	if(shipparam.requiredSpeed <= -shipmodel.maxSpeed) shipparam.requiredSpeed = -shipmodel.maxSpeed;
 }
 
-uint16_t odczytajPrzyciskiGlowne(void)
+uint16_t readMainButtons(void)
 {
 	uint16_t touched;
 	static uint16_t pretouch = 1;
@@ -1009,51 +1009,51 @@ uint16_t odczytajPrzyciskiGlowne(void)
 	
 	if(touched & 0x03) 
 	{
-		TouchTimer = 0; //nastêpne odczytanie przycisku za 1s
+		TouchTimer = 0; //next button read in 1s
 		pretouch = touched;
-		buzzerTimer = 0; //zacznij odmerzaæ czas do wy³¹czenia buzzera
-		BUZZER_ENABLE;      //w³¹cz buzzer
+		buzzerTimer = 0; //start count time to buzzer off
+		BUZZER_ENABLE;      //buzzer off
 		return touched;
 	}
 	if(!(touched & 0x03))
 	{
-		TouchTimer = 90; //nastêpne odczytanie przycisku za 0,1s
+		TouchTimer = 90; //next button read in 0,1s
 	}
-	}//end glownego if
+	}//end main if
 	else
 	{
-		dlugoscDzwiekuBuzzer(3);	
+		buzzerSoundTime(3);	
 	}
 	return pretouch;
 }
 
-void dlugoscDzwiekuBuzzer(uint8_t czas)
+void buzzerSoundTime(uint8_t time)
 {
-	if(buzzerTimer >= czas) PORTC &= ~(1<<PC1); //wy³¹cz buzzer po (czas*10) ms
+	if(buzzerTimer >= time) PORTC &= ~(1<<PC1); //buzzer off after (time*10) ms
 }
 
-uint16_t odczytajPrzyciskiSterowania(void)
+uint16_t readSteerButtons(void)
 {
-	uint16_t touchedSterowania;
+	uint16_t touchedSteer;
 	if(speedSetInManualTimer >= 100)
 	{
-		touchedSterowania = MPR_read_reg16bit(MPR_DEVICE_ADDRESS, MPR_R_TOUCHSTATUS);
+		touchedSteer = MPR_read_reg16bit(MPR_DEVICE_ADDRESS, MPR_R_TOUCHSTATUS);
 		
-		if(touchedSterowania & 0x0C) //odczytaj 2 starsze bity w 1 tetradzie
+		if(touchedSteer & 0x0C) //read 2 older bits in 1 tetrade
 		{
-			speedSetInManualTimer = 50; //nastêpne odczytanie przycisku za 0,5s
-			buzzerTimer = 0; //zacznij odmerzaæ czas do wy³¹czenia buzzera
-			BUZZER_ENABLE;      //w³¹cz buzzer
-			return touchedSterowania;
+			speedSetInManualTimer = 50; //next button read in 0,5s
+			buzzerTimer = 0; //start count time to buzzer off
+			BUZZER_ENABLE;      //buzzer off
+			return touchedSteer;
 		}
-		if(!(touchedSterowania & 0x0C))
+		if(!(touchedSteer & 0x0C))
 		{
-			speedSetInManualTimer = 90; //nastêpne odczytanie przycisku za 0,1s
+			speedSetInManualTimer = 90; //next button read in 0,1s
 		}
-	}//end glownego if
+	}//end main if
 	else
 	{
-		dlugoscDzwiekuBuzzer(3);
+		buzzerSoundTime(3);
 	}
 	return 0;
 }
@@ -1061,26 +1061,26 @@ uint16_t odczytajPrzyciskiSterowania(void)
 //##############################################################################################################
 //#############################################ETHERNET FUNCTION################################################
 //##############################################################################################################
-// ustalamy adres MAC
+// my MAC
 uint8_t mymac[6] = {'N','A','V','D','E','C'};
-// ustalamy adres IP urz¹dzenia
+// my IP 
 uint8_t myip[4] = {169,254,131,153};
 
-// ustalamy porty UDP z jakich bêdziemy korzystaæ
-// mo¿e ich byæ dowolna iloœæ
+// set UDP ports to operate
+// (there can be any amount)
 uint16_t myport[] = {8095,24478};
-// ustalamy adres IP bramy domyœlnej w sieci LAN
+// gateway ip in lan
 //static uint8_t gwip[4] = {169,254,255,255};
 
-// ustalamy wielkoœæ bufora dla ramek TCP/UDP
+//  TCP/UDP buffer size
 
 uint8_t buf[BUFFER_SIZE+1];
 
-// wskaŸnik do funkcji zwrotnej w³asnego zdarzenia UDP_EVENT()
+// pointer to callback function in UDP_EVENT() event
 void (*mk_udp_event_callback)(uint8_t *peer_ip, uint16_t port,
 uint16_t datapos, uint16_t len);
 
-// funkcja do rejestracji funkcji zwrotnej w zdarzeniu UDP_EVENT()
+// function to register callback function in UDP_EVENT() event
 void register_udp_event_callback(void (*callback)(uint8_t *peer_ip,
 uint16_t port, uint16_t datapos, uint16_t len))
 {
@@ -1088,74 +1088,74 @@ uint16_t port, uint16_t datapos, uint16_t len))
 }
 
 
-//---------------------------------- deklaracje zmiennych globalnych -------------------------------
-// indeksy adresów IP w postaci przyjaznych nazw
+
+// IP numbers alises
 enum ip_names {ip_pc, ip_sterownik1};
-// adresy IP sterowników z którymi bêdziemy siê komunikowaæ
-// za pomoc¹ protoko³u UDP  ----> pierwszy element tablicy to IP twojego komputera
-// drugi element to IP np innego uk³adu ATB
+// IP adresses drivers to communicate with
+// UDP protocol  ----> first array element is connected PC
+// second IP is another driver eq another PC or ABT board
 uint8_t farip[2][4] = { {169,254,131,151}, {192,168,0,180} };
 uint8_t PC_IP[4] = {169,254,131,151};
 
 
 
-// separator tokenów we w³asnych ramkach przesy³anych przez UDP
-char sep[] = ","; //w komunikatach z navdeca s¹ przecinki jako separatory tokenów natomiast kropki rozdzielaj¹ czêœc ca³kowit¹ od u³amkowej
+// tokens separator
+char sep[] = ","; //In NAVDEC communications there are ',' as separate tokens and '.' as decimal in numbers
 
 //_______________________________________________________________________________________________________________
-//*****************funkcje do obs³ugi komend**********************
+//*****************command functions**********************
 //navconCommand $ROZETA
 void parseROZETA(char *buffer)
 {
 	//uint8_t przygotowanieDoTarczyZielonej;
-	char *ethernetPtr,*wsk1;
-	uint16_t liczba_przedzialow, nr_przedzialu, wart1, wart2;
-	uint16_t wart1LED, wart2LED;
-	uint32_t ulamekWart1, ulamekWart2;
+	char *ethernetPtr,*ptr1;
+	uint16_t sectorsNumbers, sectorNo, value1, value2;
+	uint16_t value1LED, value2LED;
+	uint32_t fractionValue1, fractionValue2;
 	char str[25];
-	ethernetPtr = strtok_r(NULL, sep, &buffer); //wy³uskujemy ilosc przedzialow
-	liczba_przedzialow = atol(ethernetPtr);
-	ethernetPtr = strtok_r(NULL, sep, &buffer); //nr przedzialu
-	nr_przedzialu = atol(ethernetPtr);
-	ethernetPtr = strtok_r(NULL, sep, &buffer); //pierwsza wartosc
+	ethernetPtr = strtok_r(NULL, sep, &buffer); //pull out numbers of sectors on rose
+	sectorsNumbers = atol(ethernetPtr);
+	ethernetPtr = strtok_r(NULL, sep, &buffer); //sector number
+	sectorNo = atol(ethernetPtr);
+	ethernetPtr = strtok_r(NULL, sep, &buffer); //first value
 	//-----------------------
 	strcpy(str, ethernetPtr);
-	wsk1 = strtok(str, ".");
-	wart1 = atol(wsk1);
-	wsk1 = strtok(NULL, ",");
-	ulamekWart1 = atol(wsk1);
+	ptr1 = strtok(str, ".");
+	value1 = atol(ptr1);
+	ptr1 = strtok(NULL, ",");
+	fractionValue1 = atol(ptr1);
 	//-----------------------
-	ethernetPtr = strtok_r(NULL,sep, &buffer);//druga wartosc
+	ethernetPtr = strtok_r(NULL,sep, &buffer);//second value
 	//----------------------
 	strcpy(str, ethernetPtr);
-	wsk1 = strtok(str, ".");
-	wart2 = atol(wsk1);
-	wsk1 = strtok(NULL, ",");
-	ulamekWart2 = atol(wsk1);
+	ptr1 = strtok(str, ".");
+	value2 = atol(ptr1);
+	ptr1 = strtok(NULL, ",");
+	fractionValue2 = atol(ptr1);
 	//----------------------
 	ethernetPtr = strtok_r(NULL, sep, &buffer);//ethernetPtr ->NULL
 	
-	wart1LED = stopnieNaLED(wart1);
-	wart2LED = stopnieNaLED(wart2);
-	if( nr_przedzialu == 1) //gdy przyjdzie pierwszy przedzail to wyzeruj tarczê nadaj kolor czerwony
+	value1LED = degreesToLED(value1);
+	value2LED = degreesToLED(value2);
+	if( sectorNo == 1) //when first sector apper -> reeset rose and paint to red color
 	{
 		for(uint8_t j = 0; j<ROSE_DISK_MAXPIX; j++)
 		{
-			roseLed[j] = rgbColors[1];  //wstaw na ca³ej tarczy kolor czerwony
+			roseLed[j] = rgbColors[1];  //set red color to all rose
 		}
 	}
 	
-	if(wart1LED>wart2LED)
-	{//zamiana zmiennych wartosciami
-		uint16_t zmiennaPomocnicza;
-		zmiennaPomocnicza = wart1LED;
-		wart1LED = wart2LED; 
-		wart2LED = zmiennaPomocnicza;
-		for(uint8_t i = 0; i<wart1LED; i++)
+	if(value1LED>value2LED)
+	{
+		uint16_t auxiliaryVariable;
+		auxiliaryVariable = value1LED;
+		value1LED = value2LED; 
+		value2LED = auxiliaryVariable;
+		for(uint8_t i = 0; i<value1LED; i++)
 		{
 			roseLed[i] = rgbColors[3];//yellow
 		}
-		for(uint8_t i = wart2LED; i<ROSE_DISK_MAXPIX; i++)
+		for(uint8_t i = value2LED; i<ROSE_DISK_MAXPIX; i++)
 		{
 			roseLed[i] = rgbColors[3];//yellow
 		}
@@ -1163,20 +1163,20 @@ void parseROZETA(char *buffer)
 	else
 	{
 		
-	if(liczba_przedzialow==1 && nr_przedzialu==1 && wart1==0 && wart2==360)
+	if(sectorsNumbers==1 && sectorNo==1 && value1==0 && value2==360)
 	{
 		for(uint8_t i = 0; i<ROSE_DISK_MAXPIX; i++)
 		{
-			roseLed[i] = rgbColors[8];//kolor zielony
+			roseLed[i] = rgbColors[8];//green
 		}
 	}
 	
-	for(uint8_t i = wart1LED; i<wart2LED; i++)
+	for(uint8_t i = value1LED; i<value2LED; i++)
 	{
 		roseLed[i] = rgbColors[3];
 	}//end for
 	}//end main else 
-	//MAX7219_SendCourseAndSpeed(wart1LED, wart2LED);//wyœwietlenie testowe obliczonych wartoœci(do celów sprawdzaj¹cych - normalnie pozostawiæ zakomentarzowanym)
+	//MAX7219_SendCourseAndSpeed(value1LED, value2LED);//test display (normal comment)
 }
 
 //SHIPMODEL command
@@ -1184,33 +1184,33 @@ void parseSHIPMODEL(char *buffer)
 {
 	char *ethernetPtr;
 	uint8_t numerModelu;
-	ethernetPtr = strtok_r(NULL, sep, &buffer); //wy³uskujemy numer modelu statku
+	ethernetPtr = strtok_r(NULL, sep, &buffer); //ship model number
 	numerModelu = atoi(ethernetPtr);
 	ethernetPtr = strtok_r(NULL, sep, &buffer); //ethernetPtr ->NULL
 	switch(numerModelu)
 	{
 		case 1: {
-			//#######PRZYPISANIE WARTOSCI STATKU Z FLASHA#################
+			//#######COPY FROM FLASH TO OWNSHIP VARIABLE################
 			memcpy_P(&ownship, &flashOwnship1, sizeof(ownship));
-			//przypisanie wartoœci okreœlaj¹cych zachowanie statku
+			//SHIPBEHAVIOR FROM FLASH TO VARIABLE
 			memcpy_P(&shipmodel, &shipmodel1, sizeof(shipmodel));
 		} break;
 		case 2: {
-			//#######PRZYPISANIE WARTOSCI STATKU Z FLASHA#################
+			//#######COPY FROM FLASH TO OWNSHIP VARIABLE#################
 			memcpy_P(&ownship, &flashOwnship2, sizeof(ownship));
-			//przypisanie wartoœci okreœlaj¹cych zachowanie statku
+			//SHIPBEHAVIOR FROM FLASH TO VARIABLE
 			memcpy_P(&shipmodel, &shipmodel2, sizeof(shipmodel));
 		} break;
 		case 3: {
-			//#######PRZYPISANIE WARTOSCI STATKU Z FLASHA#################
+			//#######COPY FROM FLASH TO OWNSHIP VARIABLE#################
 			memcpy_P(&ownship, &flashOwnship3, sizeof(ownship));
-			//przypisanie wartoœci okreœlaj¹cych zachowanie statku
+			//SHIPBEHAVIOR FROM FLASH TO VARIABLE
 			memcpy_P(&shipmodel, &shipmodel3, sizeof(shipmodel));
 		} break;
 		default: {
-			//#######PRZYPISANIE WARTOSCI STATKU Z FLASHA#################
+			//#######COPY FROM FLASH TO OWNSHIP VARIABLE#################
 			memcpy_P(&ownship, &flashOwnship1, sizeof(ownship));
-			//przypisanie wartoœci okreœlaj¹cych zachowanie statku
+			//SHIPBEHAVIOR FROM FLASH TO VARIABLE
 			memcpy_P(&shipmodel, &shipmodel1, sizeof(shipmodel));
 		} break;
 	}//end switch
@@ -1249,7 +1249,7 @@ void parseSHIPMODEL(char *buffer)
  motorCoilOff();
 	
 }
-/******* w³asna funkcja u¿ytkownika w której mo¿emy reagowaæ na ramkê UDP ***********/
+/******* FUNCTION FOR INCOMING UDP DATAGRAM ***********/
 /****/
 void udp_event_callback(uint8_t *peer_ip, uint16_t port, uint16_t datapos, uint16_t len) {
 	//uint8_t i=0;
@@ -1260,24 +1260,24 @@ void udp_event_callback(uint8_t *peer_ip, uint16_t port, uint16_t datapos, uint1
 	uint8_t navconCommand;
 
 
-    // jeœli ramka przysz³a na drugi numer portu z listy myport[]
+    // if UDP datagram came on second element of myport[] array
     if(port == myport[1]) {
-    	// odpowiadamy na zapytanie UDP po ten sam port
-    	strcpy(str,"Ramka odpowiedzi UDP");
+    	// replay to the same port
+    	strcpy(str,"UDP replay");
     	make_udp_reply_from_request(buf,str,strlen(str), port);
 
-        // wysy³amy now¹ ramkê na dowolny inny port
-    	strcpy((char*)&buf[datapos],"Nowa ramka UDP!");
+        // send UDP to any port
+    	strcpy((char*)&buf[datapos],"New UDP!");
         send_udp_prepare(buf, 1200, farip[ip_pc], 43500);
         send_udp_transmit(buf,strlen(str));
     }
 
-    // jeœli ramka przysz³a na pierwszy numer portu z listy myport[]
+    // if UDP datagram came on first element of PCmyport[] array
     if(port == myport[0]) {
-    	// sprawdzamy czy zawiera dane
-    	ethernetPtr = strtok_r((char*)&buf[datapos + 1], sep, &rest); //buf[datapos + 1] ¿eby omin¹æ znak $ który wywala b³¹d w kompilacji
+    	// check if not empty
+    	ethernetPtr = strtok_r((char*)&buf[datapos + 1], sep, &rest); //buf[datapos + 1] to eleiminate $ sign wchih couse compilation error
     	if( ethernetPtr ) {
-    		// jeœli zawiera dane to sprawdzamy jaka navconCommand
+    		//if UDP inot empty -> check what command 
 			char charkom [10];
 			strcpy(charkom, ethernetPtr);
 			
@@ -1286,10 +1286,6 @@ void udp_event_callback(uint8_t *peer_ip, uint16_t port, uint16_t datapos, uint1
 			else if(!(strcmp(charkom, "set_lcd"))) navconCommand = 2;
 			else navconCommand = 10;
     		switch( navconCommand ) {
-    		// i w zale¿noœci od komendy wywo³ujemy odpowieni¹
-    		// funkcjê parsuj¹c¹ z tabeli wskaŸników do funkcji parsuj¹cych
-    		// przekazujemy jednoczeœnie wskaŸnik do pozosta³ej czêœci
-    		// ³añcucha z danymi, który funkcje bêd¹ parsowaæ we w³asnym zakresie
     		case 0: parseROZETA(rest); break;
     		case 1: parseSHIPMODEL(rest); break;
     		case 2: ; break;
@@ -1301,9 +1297,8 @@ void udp_event_callback(uint8_t *peer_ip, uint16_t port, uint16_t datapos, uint1
 }
 
 
-/********** zdarzenie UDP EVENT ***********************/
+/********** UDP EVENT ***********************/
 void UDP_EVENT(uint16_t *port) {
-	// zmienne tymczasowe (automatyczne)
     uint16_t plen;//, dat_p;
     uint16_t dport;
     uint8_t is_my_port=0;
@@ -1313,45 +1308,36 @@ void UDP_EVENT(uint16_t *port) {
     uint8_t udp_data_len=0;
 
 
-    // sprawdzamy czy istnieje nowy odebrany pakiet
+    // check in data is received
     plen = enc28j60PacketReceive(BUFFER_SIZE, buf);
-    // obs³uga ni¿szych warstw stosu TCP jak ICMP, ARP itp
-    // m.inn t¹ drog¹ obs³ugiwane s¹ zewnêtrzne PING'i
-    // w tym miejscu sprawdzane jest od razu czy odczytana ramka
-    // jest posiada typ jaki obs³ugiwany jest przez ten stos TCP
-    // oraz czy jest ona zaadresowana do nas (w numeru IP)
+    // lower TCP stack layer handling like ICMP, ARP etc.
+    // external PINGs are handling  with this method (there more methods)
     packetloop_icmp_tcp(buf,plen);
 
-    // jeœli d³ugoœæ odebranej ramki jest wiêksza ni¿ 0
-    // to oznacza, ¿e mamy do czynienia z prawid³owo odebran¹
-    // ramk¹ wraz z prawid³ow¹ sum¹ kontroln¹
-    // sprawdzamy tak¿e, czy na pewno mamy do czynienia z ramk¹ UDP a nie np TCP
+    // if datagram in bigger than 0 means datagram 
+	//is received correctly (with correct checksum)
+    // check if there is UDP (not TCP)
     if( plen && buf[IP_PROTO_P]==IP_PROTO_UDP_V ) {
 
-    	// sprawdzamy do jakiego nr portu kierowana jest ta ramka UDP
+    	// check to what port goes UDP
     	dport = (buf[UDP_DST_PORT_H_P]<<8) | buf[UDP_DST_PORT_L_P];
 
-    	// sprawdzamy w pêtli czy jest to ramka przeznaczona do
-    	// portu nas³uchowego, które obs³uguje nasze urz¹dzenie
-    	// listê dowolnej iloœci portów definiujemy w tablicy myport[]
-    	// która przekazywana jest jako parametr do zdarzenia/funkcji UDP_EVENT()
+    	// checki if datagram goes to handling port (definde in myport[])
     	do {
     		if( (is_my_port = (port[i++] == dport)) ) break;
     	} while (i<sizeof(port));
 
-    	// sprawdzamy czy informacja przysz³a na obs³ugiwany przez nas port UDP
+    	// check if datagram came on operational port
     	if ( is_my_port ){
 			udp_data_len=buf[UDP_LEN_L_P]-UDP_HEADER_LEN;
 
-			// jeœli wszystko siê zgadza to sprawdzamy, czy zarejestrowana jest
-			// funkcja zwrotna przez u¿ytkownika. Jeœli nie jest zarejestrowana
-			// to nie wykonana siê ¿adna akcja poza powy¿ej obs³ug¹
-			// ni¿szych warstw stosu TCP (np PING czy ARP)
-			// Jeœli jest zarejestrowana to zostanie wywo³ana z odpowiednimi parametrami
-			// 1. podany bêdzie adres IP sk¹d nadesz³a ramka
-			// 2. podany bêdzie port na jaki zosta³a do nas skierowana ramka
-			// 3. indeks do bufora ca³ej ramki TCP, wskazuj¹cy na pocz¹tek danych w ramce UDP
-			// 4. iloœæ danych w bajtach przes³anych w ramce UDP
+			// if all is ok, then check if callback function is registered
+			// if not - nothing will happen
+			// if registered:
+			// 1. sender IP adress
+			// 2. UDP datagram receive port
+			// 3. UDP buffer index point to start of the datagram
+			// 4. number of bytes of UDP datagram
 			if(mk_udp_event_callback) (*mk_udp_event_callback)(&(buf[IP_SRC_P]), dport, UDP_DATA_P, udp_data_len);
         }
     }
@@ -1363,86 +1349,86 @@ void ping_callback(uint8_t *ip){
 
 void prepareAndSendOWNDatagram(void)
 {
-	//przygotuj ramkê UDP
+	//prepare UDP
 	char str [150] = {"$OWN"};
-	char str1[21]; //tablica do przechowaywania reprezentacji wyliczonych wartoœci w postaci tekstu (jednorazowa przetrzymujemy 1 oblizon¹ wartoœæ)
-	int32_t wartoscDoWyswUDP;  //bêd¹ tu wpisywane po kolei wszystkie wartoœci obliczone przez symulator
-	strcat(str, ",0,");                                 //1. pozycja zintegrowana
+	char str1[21]; //array for string representation of enumerate value (1 value each time)
+	int32_t valueToShowUDP;  //for computed values
+	strcat(str, ",0,");                                 //1. integrated position
 	strcat(str, ownship.MMSI);							//2. MMSI
 	strcat(str, ",");
-	strcat(str, ownship.NAVSTATUS);						//3. status nawigacyjny
+	strcat(str, ownship.NAVSTATUS);						//3. nav status
 	strcat(str, ",");
-	wartoscDoWyswUDP = shipparam.currentROT*6/10;
-	itoa(wartoscDoWyswUDP, str1, 10);
-	strcat(str, str1 );									//4. ROT - czeœæ ca³kowita
+	valueToShowUDP = shipparam.currentROT*6/10;
+	itoa(valueToShowUDP, str1, 10);
+	strcat(str, str1 );									//4. ROT - intiger
 	strcat(str, ".");								
-	wartoscDoWyswUDP = (shipparam.currentROT%100)*6/10;
-	itoa(wartoscDoWyswUDP, str1, 10);
-	strcat(str, str1 );									//4. ROT - czeœæ u³amkowa
+	valueToShowUDP = (shipparam.currentROT%100)*6/10;
+	itoa(valueToShowUDP, str1, 10);
+	strcat(str, str1 );									//4. ROT - fractional number
 	strcat(str, ",");									
-	wartoscDoWyswUDP = ownship.speed/10;
-	if(ownship.speed<0){strcat(str, "-"); wartoscDoWyswUDP = -wartoscDoWyswUDP;}//umozliwia interpretacje przez navdec				
-	itoa(wartoscDoWyswUDP, str1, 10);
-	strcat(str, str1 );									//5. SOG - czêœæ ca³kowita
+	valueToShowUDP = ownship.speed/10;
+	if(ownship.speed<0){strcat(str, "-"); valueToShowUDP = -valueToShowUDP;}//umozliwia interpretacje przez navdec				
+	itoa(valueToShowUDP, str1, 10);
+	strcat(str, str1 );									//5. SOG - intiger
 	strcat(str, ".");	
-	wartoscDoWyswUDP = ownship.speed%10;
-	if(ownship.speed<0){ wartoscDoWyswUDP = -wartoscDoWyswUDP;}				
-	itoa(wartoscDoWyswUDP, str1, 10);
-	strcat(str, str1 );									//5. SOG - czêœæ u³amkowa
+	valueToShowUDP = ownship.speed%10;
+	if(ownship.speed<0){ valueToShowUDP = -valueToShowUDP;}				
+	itoa(valueToShowUDP, str1, 10);
+	strcat(str, str1 );									//5. SOG - fractional number
 	strcat(str, ",");	
-	wartoscDoWyswUDP = ownship.posLong/1000000;
-	if(ownship.posLong<0){strcat(str, "-"); wartoscDoWyswUDP = -wartoscDoWyswUDP;}//umozliwia interpretacje przez navdec
-	itoa(wartoscDoWyswUDP, str1, 10);
-	strcat(str, str1 );									//6. LONG - czêœæ ca³kowita
+	valueToShowUDP = ownship.posLong/1000000;
+	if(ownship.posLong<0){strcat(str, "-"); valueToShowUDP = -valueToShowUDP;}//allow interpretate by NAVDEC
+	itoa(valueToShowUDP, str1, 10);
+	strcat(str, str1 );									//6. LONG - intiger
 	strcat(str, ".");
-	wartoscDoWyswUDP = ownship.posLong%1000000;
-	if(ownship.posLong<0){wartoscDoWyswUDP = -wartoscDoWyswUDP;}//umozliwia interpretacje przez navdec
-	//zabezpieczenie przed ucinaniem poprzedzj¹cych zer po przecinku
-	if(wartoscDoWyswUDP<100000 && wartoscDoWyswUDP>=10000)	    strcat(str, "0");
-	else if(wartoscDoWyswUDP<10000 && wartoscDoWyswUDP>=1000)	strcat(str, "00");
-	else if(wartoscDoWyswUDP<1000 && wartoscDoWyswUDP>=100)		strcat(str, "000");
-	else if(wartoscDoWyswUDP<100 && wartoscDoWyswUDP>=10)		strcat(str, "0000");
-	else if(wartoscDoWyswUDP<10 && wartoscDoWyswUDP>=1)			strcat(str, "00000");
+	valueToShowUDP = ownship.posLong%1000000;
+	if(ownship.posLong<0){valueToShowUDP = -valueToShowUDP;}//allow interpretate by NAVDEC
+	//significant '0' security
+	if(valueToShowUDP<100000 && valueToShowUDP>=10000)	    strcat(str, "0");
+	else if(valueToShowUDP<10000 && valueToShowUDP>=1000)	strcat(str, "00");
+	else if(valueToShowUDP<1000 && valueToShowUDP>=100)		strcat(str, "000");
+	else if(valueToShowUDP<100 && valueToShowUDP>=10)		strcat(str, "0000");
+	else if(valueToShowUDP<10 && valueToShowUDP>=1)			strcat(str, "00000");
 	
-	ltoa(wartoscDoWyswUDP, str1, 10);
-	strcat(str, str1 );									//6. LONG- czêœæ u³amkowa
+	ltoa(valueToShowUDP, str1, 10);
+	strcat(str, str1 );									//6. LONG-  fractional number
 	strcat(str, ",");
-	wartoscDoWyswUDP = ownship.posLat/1000000;
-	if(ownship.posLat<0){strcat(str, "-"); wartoscDoWyswUDP = -wartoscDoWyswUDP;}//umozliwia interpretacje przez navdec
-	itoa(wartoscDoWyswUDP, str1, 10);
-	strcat(str, str1 );									//7. LAT - czêœæ ca³kowita
+	valueToShowUDP = ownship.posLat/1000000;
+	if(ownship.posLat<0){strcat(str, "-"); valueToShowUDP = -valueToShowUDP;}//allow interpretate by NAVDEC
+	itoa(valueToShowUDP, str1, 10);
+	strcat(str, str1 );									//7. LAT - intiger
 	strcat(str, ".");
-	wartoscDoWyswUDP = ownship.posLat%1000000;
-	if(ownship.posLat<0){wartoscDoWyswUDP = -wartoscDoWyswUDP;}//umozliwia interpretacje przez navdec
-	//zabezpieczenie przed ucinaniem poprzedzj¹cych zer po przecinku
-	if(wartoscDoWyswUDP<100000 && wartoscDoWyswUDP>=10000)		strcat(str, "0");
-	else if(wartoscDoWyswUDP<10000 && wartoscDoWyswUDP>=1000)	strcat(str, "00");
-	else if(wartoscDoWyswUDP<1000 && wartoscDoWyswUDP>=100)		strcat(str, "000");
-	else if(wartoscDoWyswUDP<100 && wartoscDoWyswUDP>=10)		strcat(str, "0000");
-	else if(wartoscDoWyswUDP<10 && wartoscDoWyswUDP>=1)			strcat(str, "00000");
-	ltoa(wartoscDoWyswUDP, str1, 10);
-	strcat(str, str1 );									//7. LAT- czêœæ u³amkowa
+	valueToShowUDP = ownship.posLat%1000000;
+	if(ownship.posLat<0){valueToShowUDP = -valueToShowUDP;}//allow interpretate by NAVDEC
+	//significant '0' security
+	if(valueToShowUDP<100000 && valueToShowUDP>=10000)		strcat(str, "0");
+	else if(valueToShowUDP<10000 && valueToShowUDP>=1000)	strcat(str, "00");
+	else if(valueToShowUDP<1000 && valueToShowUDP>=100)		strcat(str, "000");
+	else if(valueToShowUDP<100 && valueToShowUDP>=10)		strcat(str, "0000");
+	else if(valueToShowUDP<10 && valueToShowUDP>=1)			strcat(str, "00000");
+	ltoa(valueToShowUDP, str1, 10);
+	strcat(str, str1 );									//7. LAT-  fractional number
 	strcat(str, ",");
-	wartoscDoWyswUDP = ownship.course/10;
-	itoa(wartoscDoWyswUDP, str1, 10);
-	strcat(str, str1 );									//8. COG - czeœæ ca³kowita
+	valueToShowUDP = ownship.course/10;
+	itoa(valueToShowUDP, str1, 10);
+	strcat(str, str1 );									//8. COG - intiger
 	strcat(str, ".");
-	wartoscDoWyswUDP = ownship.course%10;
-	itoa(wartoscDoWyswUDP, str1, 10);
-	strcat(str, str1 );									//8. COG - czeœæ u³amkowa
+	valueToShowUDP = ownship.course%10;
+	itoa(valueToShowUDP, str1, 10);
+	strcat(str, str1 );									//8. COG -  fractional number
 	strcat(str, ",");
-	wartoscDoWyswUDP = ownship.course/10;
-	itoa(wartoscDoWyswUDP, str1, 10);
-	strcat(str, str1 );									//9. HEADING - czeœæ ca³kowita (TAKI JAK COG)
+	valueToShowUDP = ownship.course/10;
+	itoa(valueToShowUDP, str1, 10);
+	strcat(str, str1 );									//9. HEADING - intiger (the same as COG)
 	strcat(str, ".");
-	wartoscDoWyswUDP = ownship.course%10;
-	itoa(wartoscDoWyswUDP, str1, 10);
-	strcat(str, str1 );									//9. HEADING - czeœæ u³amkowa (TAKI JAK COG)
+	valueToShowUDP = ownship.course%10;
+	itoa(valueToShowUDP, str1, 10);
+	strcat(str, str1 );									//9. HEADING -  fractional number (the same as COG)
 	strcat(str, ",");
-	strcat(str, "0.0,0.0," );							//10 / 11 POZYCJA WSP KARTEZJAÑSKIE 
+	strcat(str, "0.0,0.0," );							//10 / 11 position cartesian 
 	strcat(str, ownship.PAS );							//12. PAS
 	strcat(str, ",");
-	strcat(str, ownship.TYP_COMMUNIKATU );				//13. TYP KOMUNIKATU
+	strcat(str, ownship.TYP_COMMUNIKATU );				//13. communicate type
 	strcat(str, ",");
 	strcat(str, ownship.IMO_NUMBER );					//14. IMO
 	strcat(str, ",");
@@ -1450,7 +1436,7 @@ void prepareAndSendOWNDatagram(void)
 	strcat(str, ",");
 	strcat(str, ownship.SHIP_NAME);						//16. SHIP NAME
 	strcat(str, ",");
-	strcat(str, ownship.TYPE_OF_SHIP );					//17. TYP STATKU
+	strcat(str, ownship.TYPE_OF_SHIP );					//17. KIND OF SHIP
 	strcat(str, ",");
 	strcat(str, ownship.DIM_A );						//18. DIMA
 	strcat(str, ",");
@@ -1459,30 +1445,30 @@ void prepareAndSendOWNDatagram(void)
 	strcat(str, ownship.DIM_C );						//20. DIMC
 	strcat(str, ",");
 	strcat(str, ownship.DIM_D );						//21. DIMD
-	strcat(str, ",1,");									//22. PRZECINEK + TYP URZ¥DZENIA
-	wartoscDoWyswUDP = ownship.ETA_month;
-	itoa(wartoscDoWyswUDP, str1, 10);
+	strcat(str, ",1,");									//22. comma + type of device
+	valueToShowUDP = ownship.ETA_month;
+	itoa(valueToShowUDP, str1, 10);
 	strcat(str, str1 );									//23. ETA MONTH
 	strcat(str, ",");
-	wartoscDoWyswUDP = ownship.ETA_day;
-	itoa(wartoscDoWyswUDP, str1, 10);
+	valueToShowUDP = ownship.ETA_day;
+	itoa(valueToShowUDP, str1, 10);
 	strcat(str, str1 );									//24. ETA DAY
 	strcat(str, ",");
-	wartoscDoWyswUDP = ownship.ETA_hour;
-	itoa(wartoscDoWyswUDP, str1, 10);
+	valueToShowUDP = ownship.ETA_hour;
+	itoa(valueToShowUDP, str1, 10);
 	strcat(str, str1 );									//25. ETA HOUR
 	strcat(str, ",");
-	wartoscDoWyswUDP = ownship.ETA_minute;
-	itoa(wartoscDoWyswUDP, str1, 10);
+	valueToShowUDP = ownship.ETA_minute;
+	itoa(valueToShowUDP, str1, 10);
 	strcat(str, str1 );									//26. ETA MINUTE
 	strcat(str, ",");
 	strcat(str, ownship.DRAUGHT);						//27. DRAUGHT
 	strcat(str, ",");
 	strcat(str, ownship.DESTINATION);					//28. DESTINATION	
 	strcat(str, ",");
-	//wyœlij ramkê UDP na adres ip znajduj¹cy siê w tablicy farip[] na port 24478 (odczytywane przez plik filetoNAVDEC, aby obliczaæ poprawne CPA i TCPA) 
+	//send UDP to ip be in farip[] to port 24478 (read by  filetoNAVDEC file, for propper CPA and TCPA computing ) 
 	send_udp(buf, str, strlen(str), 8095, farip[0], 24478);
-	//wyœlij ramkê UDP na adres ip znajduj¹cy siê w tablicy farip[] na port 10110 (odczytywane przez program NAVDEC)
+	//send UDP to ip be in farip[] to port 10110 (read by NAVDEC)
 	send_udp(buf, str, strlen(str), 8095, farip[0], 10110);
 }
 

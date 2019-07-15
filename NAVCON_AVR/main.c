@@ -3,6 +3,7 @@
  *
  * Created: 2017-05-10 18:27:20
  * Author : LUKE
+ * edited 15-07-2019
  */ 
 
 #include <avr/io.h>
@@ -28,7 +29,7 @@ int main(void)
 {
 	
 	//###################################################################
-	//#######################DOSTEPNE rgbColors#############################
+	//#############################colors################################
 	 
 	rgbColors[0].g=50; rgbColors[0].r=50; rgbColors[0].b=50;
 	rgbColors[1].g=000; rgbColors[1].r=150; rgbColors[1].b=000;//red
@@ -42,73 +43,72 @@ int main(void)
 	rgbColors[9].g=000; rgbColors[9].r=40; rgbColors[9].b=000;//l. red
 	
 	////////////////////////////////////////////////
-	enc28j60Init(mymac);//inicjalizacja uk³adu enc28j60
-	// konfiguracja diod LED w gnieŸdzie RJ45: zielona (LEDA) - link ---   ¿ó³ta (LEDB) - rx/tx
+	enc28j60Init(mymac);// enc28j60
+	// LEDs in  RJ45: green (LEDA) - link ---   yellow (LEDB) - rx/tx
 	// enc28j60PhyWrite(PHLCON,0b0000 0100 0111 01 10);
 	enc28j60PhyWrite(PHLCON,0x476);
-	init_ip_arp_udp_tcp(mymac,myip,80); // inicjalizacja stosu TCP
-	steerInit(); //inicjalizacja kana³u ADC0
-	MAX7219_Init(); //zainicjuj modu³ SPI pod³¹czony do wyœwietlaczy autopilota
+	init_ip_arp_udp_tcp(mymac,myip,80); //  TCP stack inicjalization
+	steerInit(); //ADC0 init
+	MAX7219_Init(); //SPI init
 	I2C_Init();
-	timerInit(); //zainicjuj timery do obs³ugi wywo³ywania funkcji do oblicznia parametrów statku w³asnego
-	tarczaInit();
-	czujnikTarczyInit();
+	timerInit(); 
+	roseInit();
+	RoseSensorInit();
 	buzzerInit();
 	mpr_reset();
 	Timer2Init();
-	enkoderyInit();
-	//kalibracjaTarczy(); //tutaj jest pêtla czyli funkcja ta bêdzie d³ugo wykonywa³a siê, ale to nie szkodzi
+	encodersInit();
+	roseCalibration(); //loop here -> logn execution but not matter
 	
-	//#######PRZYPISANIE WARTOSCI STATKU Z FLASHA#################
+	//#######write ship data from flash#################
 	memcpy_P(&ownship, &flashOwnship2, sizeof(ownship));
 	memcpy_P(&shipmodel, &shipmodel2, sizeof(shipmodel));
 	
-	/********** inicjalizacja funkcji obs³ugi stosu TCP *********************/
 
-	// zarejestrowanie w³asnej procedury obs³ugi/reakcji na ping
+	// zarejestrowanie wï¿½asnej procedury obsï¿½ugi/reakcji na ping
 	register_ping_rec_callback(&ping_callback);
 
-	// zarejestrowanie w³asnej procedury obs³ugi/reakcji na
-	// przychodz¹ce pakiety UDP
+	// zarejestrowanie wï¿½asnej procedury obsï¿½ugi/reakcji na
+	// reveive UDP packets
 	register_udp_event_callback(udp_event_callback);
 	//Zaptyanie ARP
 	//client_arp_whohas(buf,PC_IP);
 	//client_waiting_gw();
 	//_delay_ms(2000);
 	
-	//po w³¹czeniu symulator startuje w autopilocie
+	//autopilot on after restart
 	prevTouched = 1;
 	switchedToAuto = 1;
 	sei();
 	NAVCON_CALIBRATION();
     while (1) 
     {
-		prevTouched = odczytajPrzyciskiGlowne();
-		//wybor ustawieñ w zale¿noœci od wybranego trybu (auto/manual)
-		switch(prevTouched & 0x03) {  //pierwszy auto / drugi manual --bierz pod uwagê tylko 2 najm³odsze bity
+		prevTouched = readMainButtons();
+		//auto/manual
+		switch(prevTouched & 0x03) {  //first auto / second manual 
 			case 1: {
 				if(switchedToAuto)
 				 {
-					 shipparam.requiredCourse = ownship.course; //gdy !0 to znaczy ¿e prze³¹czono na auto i przepisz kurs do rz¹danego kursu
+					 shipparam.requiredCourse = ownship.course; 
 					 shipparam.requiredSpeed = ownship.speed;
 				 }
-				uaktualnijPredkoscAuto();
-				uaktualnijKursAuto();
+				updateSpeedAuto();
+				updateCourseAuto();
 				MAX7219_SendCourseAndSpeed(shipparam.requiredCourse, shipparam.requiredSpeed);
-				wyswietlenieNastawyPredkosciLED(shipparam.requiredSpeed, 8, 9);
+				showSpeedSettingLED(shipparam.requiredSpeed, 8, 9);
 				switchedToAuto = 0;
 				} break;
 				
 			case 2:  {
 				switchedToAuto = 1; 
 				convertFrom10bitValueToRequiredSteerAngle();
-				MAX7219_autopilotOFF(); //kreski na wyœwietlaczu od autopilota
-				uint8_t status = (uint8_t)odczytajPrzyciskiSterowania();
+				MAX7219_autopilotOFF(); //"lines" in autopilot displays
+				uint8_t status = (uint8_t)readSteerButtons();
 				if(status & 0x04) shipparam.requiredSpeed += shipmodel.maxSpeed/8; // + 1/8 maxspeed
 				if(status & 0x08) shipparam.requiredSpeed -= shipmodel.maxSpeed/8; // - 1/8 maxspeed
-				if(shipparam.requiredSpeed > shipmodel.maxSpeed) shipparam.requiredSpeed = shipmodel.maxSpeed;   //aby nie przekroczyæ max speed
-				if(shipparam.requiredSpeed < -shipmodel.maxSpeed) shipparam.requiredSpeed = -shipmodel.maxSpeed; //aby nie przekroczyæ max speed
-				wyswietlenieNastawyPredkosciLED(shipparam.requiredSpeed, 4, 1);
+				if(shipparam.requiredSpeed > shipmodel.maxSpeed) shipparam.requiredSpeed = shipmodel.maxSpeed;   
+				if(shipparam.requiredSpeed < -shipmodel.maxSpeed) shipparam.requiredSpeed = -shipmodel.maxSpeed; 
+				showSpeedSettingLED(shipparam.requiredSpeed, 4, 1);
 			} break;
 				
 			      }//end switch
